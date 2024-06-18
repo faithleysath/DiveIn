@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帖子详情</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+    <style>
+        .BDE_Image {
+            max-width: 100%;
+            height: auto;
+            transition: transform 0.25s ease;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">帖子详情</h1>
+        <div id="post-list" class="list-group"></div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const thread_id = urlParams.get('thread_id');
+            fetchThreadPosts(thread_id);
+
+            // Event delegation to handle click on dynamically loaded images
+            $(document).on('click', '.BDE_Image', function(e) {
+                e.preventDefault();
+                const clickedImg = $(this);
+                const gallery = $('.BDE_Image').filter((i, img) => {
+                    // Filter out images smaller than 100x100
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+                    return width >= 100 && height >= 100;
+                }).map((i, img) => {
+                    return { src: $(img).attr('src'), opts: { caption: $(img).attr('alt') } };
+                }).get();
+                const index = gallery.findIndex(image => image.src === clickedImg.attr('src'));
+                $.fancybox.open(gallery, {}, index);
+            });
+        });
+
+        function fetchThreadPosts(thread_id) {
+            $.getJSON(`/api/thread/${thread_id}`, function(posts) {
+                $.getJSON(`/api/comments/${thread_id}`, function(comments) {
+                    const commentsByPost = {};
+                    comments.forEach(comment => {
+                        if (!commentsByPost[comment.post_id]) {
+                            commentsByPost[comment.post_id] = [];
+                        }
+                        commentsByPost[comment.post_id].push(comment);
+                    });
+                    posts.forEach(post => {
+                        const postElement = $(`
+                            <div class="list-group-item">
+                                <h5><a href="user.html?portrait=${post.author_portrait}" target="_blank">${post.author_name} (${post.author_nickname})</a></h5>
+                                <p>${replaceImgTags(post.content)}</p>
+                                <small>发表于 ${post.post_time} | IP属地: ${post.ip_location} | 楼层: ${post.floor}</small>
+                                <div class="comments-list list-group mt-3" id="comments-${post.post_id}"></div>
+                            </div>
+                        `);
+                        $('#post-list').append(postElement);
+                        const commentsList = $(`#comments-${post.post_id}`);
+                        if (commentsByPost[post.post_id]) {
+                            commentsByPost[post.post_id].forEach(comment => {
+                                commentsList.append(`
+                                    <div class="list-group-item">
+                                        <h6><a href="user.html?portrait=${comment.author_portrait}" target="_blank">${comment.author_name} (${comment.author_nickname})</a></h6>
+                                        <p>${replaceImgTags(comment.content)}</p>
+                                        <small>发表于 ${comment.comment_time}</small>
+                                    </div>
+                                `);
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        function replaceImgTags(content) {
+            return content.replace(/<img /g, '<img class="BDE_Image" referrerpolicy="no-referrer" ');
+        }
+    </script>
+</body>
+</html>

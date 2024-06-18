@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户详情</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">用户详情</h1>
+        <div id="user-info" class="card"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const portrait = urlParams.get('portrait');
+            fetchUserInfo(portrait);
+        });
+
+        function fetchUserInfo(portrait) {
+            $.getJSON(`/api/user/${portrait}`, function(user) {
+                $('#user-info').html(`
+                    <div class="card-body">
+                        <h5 class="card-title">${user.show_nickname}</h5>
+                        <p class="card-text">性别: ${user.sex}</p>
+                        <p class="card-text">贴吧龄: ${user.age}年</p>
+                        <p class="card-text">发帖数: ${user.post_num}</p>
+                        <p class="card-text">关注数: ${user.followed_count}</p>
+                        <p class="card-text">VIP: ${user.is_vip ? '是' : '否'}</p>
+                        <p class="card-text">IP属地: ${user.ip_location}</p>
+                    </div>
+                `);
+            });
+        }
+    </script>
+</body>
+</html>

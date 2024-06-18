@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孙笑川吧首页</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.net/twitter-bootstrap/5.1.1/css/bootstrap.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">孙笑川吧首页</h1>
+        <div id="forum-info" class="mb-4"></div>
+        <ul id="thread-list" class="list-group"></ul>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            fetchForumInfo();
+        });
+
+        function fetchForumInfo() {
+            $.getJSON('/api/forum/孙笑川', function(data) {
+                const forumInfo = data.forum_data;
+                $('#forum-info').html(`
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">${forumInfo.forum_name}</h5>
+                            <p class="card-text">一级分类: ${forumInfo.first_class}</p>
+                            <p class="card-text">二级分类: ${forumInfo.second_class}</p>
+                            <p class="card-text">关注数: ${forumInfo.followed_count}</p>
+                            <p class="card-text">主题数: ${forumInfo.thread_num}</p>
+                            <p class="card-text">帖子数: ${forumInfo.post_num}</p>
+                        </div>
+                    </div>
+                `);
+
+                const threads = data.threads;
+                threads.forEach(thread => {
+                    $('#thread-list').append(`
+                        <li class="list-group-item">
+                            <a href="thread.html?thread_id=${thread.id}" class="thread-link">${thread.title}</a>
+                        </li>
+                    `);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
